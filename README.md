@@ -1,7 +1,5 @@
 # DevPad
 
-![DevPad](assets/logo.svg)
-
 A Beginner-Friendly Code Editor for Learning Web Development
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
