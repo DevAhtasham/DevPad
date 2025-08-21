@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevPad</title>
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/scroll/simplescrollbars.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.css">
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Fontawesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-dark">
+    <div class="ide-container">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="logo">
+                <i class="fa-solid fa-layer-group"></i>
+                DevPad
+            </div>
+            <div class="actions">
+                <button class="theme-toggle" title="Toggle Theme (Alt+T)">
+                    <i class="ri-contrast-2-line"></i>
+                </button>
+                <button class="save-project" title="Save Project (Ctrl+S)">
+                    <i class="ri-save-line"></i>
+                </button>
+                <button class="load-project" title="Load Project (Ctrl+O)">
+                    <i class="ri-folder-open-line"></i>
+                </button>
+                <button class="share-project" title="Share Project (Ctrl+Shift+S)">
+                    <i class="ri-share-line"></i>
+                </button>
+                <button class="download-files" title="Download Files">
+                    <i class="ri-download-2-line"></i>
+                </button>
+                <button class="settings-btn" title="Settings (Alt+,)">
+                    <i class="ri-settings-3-line"></i>
+                </button>
+                <button class="shortcuts-btn" title="Keyboard Shortcuts (Ctrl+K)">
+                    <i class="ri-keyboard-box-line"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Editor Section -->
+            <div class="editor-section">
+                <!-- Editor Tabs -->
+                <div class="editor-tabs">
+                    <button class="tab active" data-tab="html">
+                        <i class="ri-html5-line"></i>
+                        HTML
+                    </button>
+                    <button class="tab" data-tab="css">
+                        <i class="ri-css3-line"></i>
+                        CSS
+                    </button>
+                    <button class="tab" data-tab="js">
+                        <i class="ri-javascript-line"></i>
+                        JavaScript
+                    </button>
+                </div>
+                
+                <!-- Editor Panels -->
+                <div class="editor-panels">
+                    <div class="panel active" id="html-panel">
+                        <textarea id="html-editor"></textarea>
+                    </div>
+                    <div class="panel" id="css-panel">
+                        <textarea id="css-editor"></textarea>
+                    </div>
+                    <div class="panel" id="js-panel">
+                        <textarea id="js-editor"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resizable Divider -->
+            <div class="divider"></div>
+
+            <!-- Preview Section -->
+            <div class="preview-section">
+                <div class="preview-header">
+                    <div class="preview-controls">
+                        <button class="preview-size active" data-size="desktop" title="Desktop View">
+                            <i class="ri-computer-line"></i>
+                        </button>
+                        <button class="preview-size" data-size="tablet" title="Tablet View">
+                            <i class="ri-tablet-line"></i>
+                        </button>
+                        <button class="preview-size" data-size="mobile" title="Mobile View">
+                            <i class="ri-smartphone-line"></i>
+                        </button>
+                    </div>
+                    <div class="preview-actions">
+                    <button class="refresh-preview" title="Refresh Preview">
+                        <i class="ri-refresh-line"></i>
+                        Refresh
+                        </button>
+                        <button class="open-preview" title="Open in New Window">
+                            <i class="ri-external-link-line"></i>
+                    </button>
+                </div>
+            </div>
+                <div class="preview-frame">
+                    <iframe id="preview" sandbox="allow-scripts allow-same-origin"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Save Project Modal -->
+    <div class="modal" id="save-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Save Project</h3>
+                <button class="close-modal">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label class="input-label" for="project-name">Project Name</label>
+                    <input type="text" id="project-name" placeholder="Enter a name for your project">
+                </div>
+                <button class="btn btn-primary save-confirm">
+                    <i class="ri-save-line"></i>
+                    Save Project
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Load Modal -->
+    <div class="modal" id="load-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Load Project</h3>
+                <button class="close-modal">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="projects-list">
+                    <!-- Projects will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal" id="share-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Share Project</h3>
+                <button class="close-modal">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="share-options">
+                    <button class="btn btn-secondary copy-html">
+                        <i class="ri-html5-line"></i>
+                        Copy HTML
+                    </button>
+                    <button class="btn btn-secondary copy-css">
+                        <i class="ri-css3-line"></i>
+                        Copy CSS
+                    </button>
+                    <button class="btn btn-secondary copy-js">
+                        <i class="ri-javascript-line"></i>
+                        Copy JavaScript
+                    </button>
+                    <button class="btn btn-primary copy-all">
+                        <i class="ri-file-copy-line"></i>
+                        Copy All Code
+                    </button>
+                </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="close-modal">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-group">
+                    <label class="settings-label">Theme</label>
+                    <div class="theme-options">
+                        <button class="theme-option active" data-theme="dark">
+                            <i class="ri-moon-line"></i>
+                            Dark
+                        </button>
+                        <button class="theme-option" data-theme="blue">
+                            <i class="ri-water-flash-line"></i>
+                            Blue
+                        </button>
+                        <button class="theme-option" data-theme="green">
+                            <i class="ri-leaf-line"></i>
+                            Green
+                        </button>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Editor Settings</label>
+                    <div class="settings-options">
+                        <label class="setting-item">
+                            <span>Font Size</span>
+                            <select id="font-size">
+                                <option value="12">12px</option>
+                                <option value="14" selected>14px</option>
+                                <option value="16">16px</option>
+                                <option value="18">18px</option>
+                            </select>
+                        </label>
+                        <label class="setting-item">
+                            <span>Tab Size</span>
+                            <select id="tab-size">
+                                <option value="2">2 spaces</option>
+                                <option value="4" selected>4 spaces</option>
+                                <option value="8">8 spaces</option>
+                            </select>
+                        </label>
+                        <label class="setting-item">
+                            <span>Auto Save</span>
+                            <label class="switch">
+                                <input type="checkbox" id="auto-save">
+                                <span class="slider"></span>
+                            </label>
+                        </label>
+                        <label class="setting-item">
+                            <span>Line Numbers</span>
+                            <label class="switch">
+                                <input type="checkbox" id="line-numbers" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </label>
+                        <label class="setting-item">
+                            <span>Word Wrap</span>
+                            <label class="switch">
+                                <input type="checkbox" id="word-wrap" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div class="modal" id="shortcuts-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Keyboard Shortcuts</h3>
+                <button class="close-modal">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-list">
+                    <div class="shortcut-group">
+                        <h4>General</h4>
+                        <div class="shortcut-item">
+                            <span>Save Project</span>
+                            <kbd>Ctrl + S</kbd>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Load Project</span>
+                            <kbd>Ctrl + O</kbd>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Share Project</span>
+                            <kbd>Ctrl + Shift + S</kbd>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Settings</span>
+                            <kbd>Alt + ,</kbd>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Toggle Theme</span>
+                            <kbd>Alt + T</kbd>
+                        </div>
+                    </div>
+                    <div class="shortcut-group">
+                        <h4>Editor</h4>
+                        <div class="shortcut-item">
+                            <span>Switch to HTML</span>
+                            <kbd>Alt + 1</kbd>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Switch to CSS</span>
+                            <kbd>Alt + 2</kbd>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Switch to JS</span>
+                            <kbd>Alt + 3</kbd>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Format Code</span>
+                            <kbd>Alt + F</kbd>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Find</span>
+                            <kbd>Ctrl + F</kbd>
+                        </div>
+                    </div>
+                    <div class="shortcut-group">
+                        <h4>Preview</h4>
+                        <div class="shortcut-item">
+                            <span>Refresh Preview</span>
+                            <kbd>Alt + R</kbd>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Desktop View</span>
+                            <kbd>Alt + D</kbd>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Tablet View</span>
+                            <kbd>Alt + B</kbd>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Mobile View</span>
+                            <kbd>Alt + M</kbd>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading...</div>
+    </div>
+
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/scroll/simplescrollbars.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/javascript-hint.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/html-hint.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/css-hint.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.1/standalone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.1/parser-html.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.1/parser-postcss.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.1/parser-babel.js"></script>
+    <!-- Custom JS -->
+    <script src="script.js"></script>
+</body>
+</html>
