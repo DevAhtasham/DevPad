@@ -1,6 +1,6 @@
 # DevPad
 
-![DevPad](assets/logo.png)
+![DevPad](assets/logo.svg)
 
 A Beginner-Friendly Code Editor for Learning Web Development
 
