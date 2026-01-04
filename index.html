@@ -15,7 +15,7 @@
     <!-- Fontawesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
@@ -23,32 +23,40 @@
     <div class="ide-container">
         <!-- Top Bar -->
         <div class="top-bar">
-            <div class="logo">
-                <i class="fa-solid fa-layer-group"></i>
-                DevPad
+            <div style="display: flex; align-items: center;">
+                <div class="logo">
+                    <i class="fa-solid fa-layer-group"></i>
+                    DevPad
+                </div>
+                <div class="project-info" style="display: none;">
+                    <span class="project-name">Untitled Project</span>
+                    <span class="project-status">
+                        <i class="ri-save-line"></i>
+                        All changes saved
+                    </span>
+                </div>
             </div>
             <div class="actions">
-                <button class="theme-toggle" title="Toggle Theme (Alt+T)">
-                    <i class="ri-contrast-2-line"></i>
-                </button>
-                <button class="save-project" title="Save Project (Ctrl+S)">
-                    <i class="ri-save-line"></i>
-                </button>
-                <button class="load-project" title="Load Project (Ctrl+O)">
-                    <i class="ri-folder-open-line"></i>
-                </button>
-                <button class="share-project" title="Share Project (Ctrl+Shift+S)">
-                    <i class="ri-share-line"></i>
-                </button>
-                <button class="download-files" title="Download Files">
-                    <i class="ri-download-2-line"></i>
-                </button>
-                <button class="settings-btn" title="Settings (Alt+,)">
-                    <i class="ri-settings-3-line"></i>
-                </button>
-                <button class="shortcuts-btn" title="Keyboard Shortcuts (Ctrl+K)">
-                    <i class="ri-keyboard-box-line"></i>
-                </button>
+                <div class="action-group">
+                    <button class="theme-toggle" title="Toggle Theme (Alt+T)">
+                        <i class="ri-contrast-2-line"></i>
+                    </button>
+                    <button class="save-project" title="Save Project (Ctrl+S)">
+                        <i class="ri-save-line"></i>
+                    </button>
+                    <button class="load-project" title="Load Project (Ctrl+O)">
+                        <i class="ri-folder-open-line"></i>
+                    </button>
+                    <button class="share-project" title="Share Project (Ctrl+Shift+S)">
+                        <i class="ri-share-line"></i>
+                    </button>
+                    <button class="download-files" title="Download Files">
+                        <i class="ri-download-2-line"></i>
+                    </button>
+                    <button class="settings-btn" title="Settings (Alt+,)">
+                        <i class="ri-settings-3-line"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -67,7 +75,7 @@
                         CSS
                     </button>
                     <button class="tab" data-tab="js">
-                        <i class="ri-javascript-line"></i>
+                        <i class="fa-brands fa-js"></i>
                         JavaScript
                     </button>
                 </div>
@@ -189,157 +197,119 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div class="modal" id="settings-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Settings</h3>
-                <button class="close-modal">
-                    <i class="ri-close-line"></i>
-                </button>
+    <!-- Settings Popover -->
+    <div class="settings-popover" id="settings-popover" aria-hidden="true">
+        <div class="settings-popover-header">
+            <div class="settings-popover-title">
+                <h3>Quick Settings</h3>
+                <p>Adjust your workspace and shortcuts</p>
             </div>
-            <div class="modal-body">
-                <div class="settings-group">
-                    <label class="settings-label">Theme</label>
-                    <div class="theme-options">
-                        <button class="theme-option active" data-theme="dark">
-                            <i class="ri-moon-line"></i>
-                            Dark
-                        </button>
-                        <button class="theme-option" data-theme="blue">
-                            <i class="ri-water-flash-line"></i>
-                            Blue
-                        </button>
-                        <button class="theme-option" data-theme="green">
-                            <i class="ri-leaf-line"></i>
-                            Green
-                        </button>
-                    </div>
-                </div>
-                <div class="settings-group">
-                    <label class="settings-label">Editor Settings</label>
-                    <div class="settings-options">
-                        <label class="setting-item">
-                            <span>Font Size</span>
-                            <select id="font-size">
-                                <option value="12">12px</option>
-                                <option value="14" selected>14px</option>
-                                <option value="16">16px</option>
-                                <option value="18">18px</option>
-                            </select>
-                        </label>
-                        <label class="setting-item">
-                            <span>Tab Size</span>
-                            <select id="tab-size">
-                                <option value="2">2 spaces</option>
-                                <option value="4" selected>4 spaces</option>
-                                <option value="8">8 spaces</option>
-                            </select>
-                        </label>
-                        <label class="setting-item">
-                            <span>Auto Save</span>
-                            <label class="switch">
-                                <input type="checkbox" id="auto-save">
-                                <span class="slider"></span>
-                            </label>
-                        </label>
-                        <label class="setting-item">
-                            <span>Line Numbers</span>
-                            <label class="switch">
-                                <input type="checkbox" id="line-numbers" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </label>
-                        <label class="setting-item">
-                            <span>Word Wrap</span>
-                            <label class="switch">
-                                <input type="checkbox" id="word-wrap" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </label>
-                    </div>
-                </div>
-            </div>
+            <button class="close-settings-popover" aria-label="Close settings">
+                <i class="ri-close-line"></i>
+            </button>
         </div>
-    </div>
-
-    <!-- Keyboard Shortcuts Modal -->
-    <div class="modal" id="shortcuts-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Keyboard Shortcuts</h3>
-                <button class="close-modal">
-                    <i class="ri-close-line"></i>
-                </button>
+        <div class="settings-popover-body">
+            <div class="settings-group">
+                <label class="settings-label">Theme</label>
+                <div class="theme-options">
+                    <button class="theme-option active" data-theme="dark">
+                        <i class="ri-moon-line"></i>
+                        <span>Dark</span>
+                    </button>
+                    <button class="theme-option" data-theme="blue">
+                        <i class="ri-water-flash-line"></i>
+                        <span>Blue</span>
+                    </button>
+                    <button class="theme-option" data-theme="green">
+                        <i class="ri-leaf-line"></i>
+                        <span>Green</span>
+                    </button>
+                    <button class="theme-option" data-theme="light">
+                        <i class="ri-sun-line"></i>
+                        <span>Light</span>
+                    </button>
+                </div>
             </div>
-            <div class="modal-body">
-                <div class="shortcuts-list">
-                    <div class="shortcut-group">
-                        <h4>General</h4>
-                        <div class="shortcut-item">
-                            <span>Save Project</span>
-                            <kbd>Ctrl + S</kbd>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Load Project</span>
-                            <kbd>Ctrl + O</kbd>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Share Project</span>
-                            <kbd>Ctrl + Shift + S</kbd>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Settings</span>
-                            <kbd>Alt + ,</kbd>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Toggle Theme</span>
-                            <kbd>Alt + T</kbd>
-                        </div>
+            <div class="settings-group">
+                <label class="settings-label">Editor Settings</label>
+                <div class="settings-options">
+                    <label class="setting-item">
+                        <span>Font Size</span>
+                        <select id="font-size">
+                            <option value="12">12px</option>
+                            <option value="14" selected>14px</option>
+                            <option value="16">16px</option>
+                            <option value="18">18px</option>
+                        </select>
+                    </label>
+                    <label class="setting-item">
+                        <span>Tab Size</span>
+                        <select id="tab-size">
+                            <option value="2">2 spaces</option>
+                            <option value="4" selected>4 spaces</option>
+                            <option value="8">8 spaces</option>
+                        </select>
+                    </label>
+                    <label class="setting-item">
+                        <span>Auto Save</span>
+                        <label class="switch">
+                            <input type="checkbox" id="auto-save">
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                    <label class="setting-item">
+                        <span>Line Numbers</span>
+                        <label class="switch">
+                            <input type="checkbox" id="line-numbers" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                    <label class="setting-item">
+                        <span>Word Wrap</span>
+                        <label class="switch">
+                            <input type="checkbox" id="word-wrap" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                </div>
+            </div>
+            <div class="settings-group shortcuts-inline">
+                <label class="settings-label">Keyboard Shortcuts</label>
+                <div class="shortcuts-inline-grid">
+                    <div class="shortcut-chip">
+                        <span>Save Project</span>
+                        <kbd>Ctrl + S</kbd>
                     </div>
-                    <div class="shortcut-group">
-                        <h4>Editor</h4>
-                        <div class="shortcut-item">
-                            <span>Switch to HTML</span>
-                            <kbd>Alt + 1</kbd>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Switch to CSS</span>
-                            <kbd>Alt + 2</kbd>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Switch to JS</span>
-                            <kbd>Alt + 3</kbd>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Format Code</span>
-                            <kbd>Alt + F</kbd>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Find</span>
-                            <kbd>Ctrl + F</kbd>
-                        </div>
+                    <div class="shortcut-chip">
+                        <span>Load Project</span>
+                        <kbd>Ctrl + O</kbd>
                     </div>
-                    <div class="shortcut-group">
-                        <h4>Preview</h4>
-                        <div class="shortcut-item">
-                            <span>Refresh Preview</span>
-                            <kbd>Alt + R</kbd>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Desktop View</span>
-                            <kbd>Alt + D</kbd>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Tablet View</span>
-                            <kbd>Alt + B</kbd>
-                        </div>
-                        <div class="shortcut-item">
-                            <span>Mobile View</span>
-                            <kbd>Alt + M</kbd>
-                        </div>
+                    <div class="shortcut-chip">
+                        <span>Share Project</span>
+                        <kbd>Ctrl + Shift + S</kbd>
+                    </div>
+                    <div class="shortcut-chip">
+                        <span>Toggle Theme</span>
+                        <kbd>Alt + T</kbd>
+                    </div>
+                    <div class="shortcut-chip">
+                        <span>Open Quick Settings</span>
+                        <kbd>Ctrl + K</kbd>
+                    </div>
+                    <div class="shortcut-chip">
+                        <span>Refresh Preview</span>
+                        <kbd>Alt + R</kbd>
+                    </div>
+                    <div class="shortcut-chip">
+                        <span>Switch Tabs</span>
+                        <kbd>Alt + 1 / 2 / 3</kbd>
+                    </div>
+                    <div class="shortcut-chip">
+                        <span>Device Views</span>
+                        <kbd>Alt + D / B / M</kbd>
                     </div>
                 </div>
+                <p class="shortcuts-hint">Tip: Press <kbd>Alt + ,</kbd> or <kbd>Ctrl + K</kbd> to toggle quick settings.</p>
             </div>
         </div>
     </div>
@@ -350,6 +320,15 @@
         <div class="loading-text">Loading...</div>
     </div>
 
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar"></div>
+
+    <!-- JSZip for file downloads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
     <!-- CodeMirror JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>

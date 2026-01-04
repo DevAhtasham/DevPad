@@ -98,13 +98,55 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Toast Notification System
+    function showToast(type, title, message, duration = 4000) {
+        const toastContainer = document.querySelector('.toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icons = {
+            success: 'ri-checkbox-circle-line',
+            error: 'ri-error-warning-line',
+            warning: 'ri-alert-line',
+            info: 'ri-information-line'
+        };
+        
+        toast.innerHTML = `
+            <i class="toast-icon ${icons[type]}"></i>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <i class="toast-close ri-close-line"></i>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        // Close button
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+            removeToast(toast);
+        });
+        
+        // Auto remove
+        setTimeout(() => {
+            removeToast(toast);
+        }, duration);
+    }
+    
+    function removeToast(toast) {
+        toast.classList.add('hiding');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }
+
     // Theme Management
     let currentTheme = 'dark';
     const themeOptions = document.querySelectorAll('.theme-option');
     const body = document.body;
 
     function setTheme(theme) {
-        body.classList.remove('theme-dark', 'theme-blue', 'theme-green');
+        body.classList.remove('theme-dark', 'theme-blue', 'theme-green', 'theme-light');
         body.classList.add(`theme-${theme}`);
         currentTheme = theme;
 
@@ -114,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Save theme preference
         localStorage.setItem('preferred-theme', theme);
+        showToast('success', 'Theme Changed', `Switched to ${theme.charAt(0).toUpperCase() + theme.slice(1)} theme`, 2000);
     }
 
     themeOptions.forEach(option => {
@@ -130,15 +173,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Theme Toggle Button (cycles through themes)
     document.querySelector('.theme-toggle').addEventListener('click', () => {
-        const themes = ['dark', 'blue', 'green'];
+        const themes = ['dark', 'blue', 'green', 'light'];
         const currentIndex = themes.indexOf(currentTheme);
         const nextTheme = themes[(currentIndex + 1) % themes.length];
         setTheme(nextTheme);
     });
 
+    // Resizable Divider
+    const divider = document.querySelector('.divider');
+    const editorSection = document.querySelector('.editor-section');
+    const previewSection = document.querySelector('.preview-section');
+    let isDragging = false;
+    
+    if (divider) {
+        divider.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            divider.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const containerWidth = document.querySelector('.main-content').offsetWidth;
+            const newEditorWidth = (e.clientX / containerWidth) * 100;
+            
+            if (newEditorWidth > 20 && newEditorWidth < 80) {
+                editorSection.style.width = `${newEditorWidth}%`;
+                previewSection.style.flex = '1';
+            }
+
+            if (resizeAnimationFrame) {
+                cancelAnimationFrame(resizeAnimationFrame);
+            }
+
+            resizeAnimationFrame = requestAnimationFrame(() => {
+                autoAdjustPreviewMode({ triggerUpdate: false });
+            });
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                divider.classList.remove('dragging');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                
+                // Refresh editors after resize
+                setTimeout(() => {
+                    htmlEditor.refresh();
+                    cssEditor.refresh();
+                    jsEditor.refresh();
+                }, 100);
+
+                const modeChanged = autoAdjustPreviewMode({ triggerUpdate: false });
+                if (modeChanged) {
+                    updatePreview();
+                }
+            }
+        });
+    }
+
     // Preview Update
     function updatePreview() {
-        showLoading('Updating preview...');
+        const progressBar = document.querySelector('.progress-bar');
+        progressBar.classList.add('active');
         
         const preview = document.getElementById('preview');
         const html = htmlEditor.getValue();
@@ -183,14 +283,16 @@ document.addEventListener('DOMContentLoaded', () => {
         previewFrame.write(previewContent);
         previewFrame.close();
 
-        // Hide loading after a small delay to ensure preview has loaded
-        setTimeout(hideLoading, 500);
+        // Hide progress bar after preview has loaded
+        setTimeout(() => {
+            progressBar.classList.remove('active');
+        }, 500);
     }
 
-    // Manual preview refresh with loading animation
+    // Manual preview refresh
     document.querySelector('.refresh-preview').addEventListener('click', () => {
-        showLoading('Refreshing preview...');
-        setTimeout(updatePreview, 300);
+        updatePreview();
+        showToast('info', 'Preview Refreshed', 'Your preview has been updated', 2000);
     });
 
     // Auto-update preview (debounced)
@@ -216,31 +318,68 @@ document.addEventListener('DOMContentLoaded', () => {
     // Responsive Preview
     const previewSizeButtons = document.querySelectorAll('.preview-size');
     const previewFrame = document.querySelector('.preview-frame');
+    let currentPreviewMode = 'desktop';
+    let resizeAnimationFrame = null;
+
+    const normalizePreviewMode = (mode) => {
+        return ['desktop', 'tablet', 'mobile'].includes(mode) ? mode : 'desktop';
+    };
+
+    const setPreviewMode = (mode, { triggerUpdate = true } = {}) => {
+        if (!previewFrame) return false;
+        const normalizedMode = normalizePreviewMode(mode);
+        const modeChanged = currentPreviewMode !== normalizedMode;
+        currentPreviewMode = normalizedMode;
+
+        previewFrame.dataset.size = normalizedMode;
+        previewSizeButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.size === normalizedMode);
+        });
+
+        if (modeChanged && triggerUpdate) {
+            updatePreview();
+        }
+
+        return modeChanged;
+    };
+
+    const detectPreviewModeFromWidth = (width) => {
+        if (width <= 560) return 'mobile';
+        if (width <= 960) return 'tablet';
+        return 'desktop';
+    };
+
+    const autoAdjustPreviewMode = ({ triggerUpdate = false } = {}) => {
+        if (!previewFrame) return false;
+        const { width } = previewFrame.getBoundingClientRect();
+        const detectedMode = detectPreviewModeFromWidth(width);
+        return setPreviewMode(detectedMode, { triggerUpdate });
+    };
 
     previewSizeButtons.forEach(button => {
         button.addEventListener('click', () => {
-            previewSizeButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            previewFrame.dataset.size = button.dataset.size;
-            updatePreview();
+            setPreviewMode(button.dataset.size);
         });
     });
 
-    // Modal Management
+    setPreviewMode(currentPreviewMode, { triggerUpdate: false });
+
+    // Modal Management Helpers
     function showModal(modalId) {
         const modal = document.getElementById(modalId);
         if (!modal) return;
-        
+
         modal.style.display = 'flex';
-        setTimeout(() => {
+        requestAnimationFrame(() => {
             const content = modal.querySelector('.modal-content');
             if (content) {
                 content.style.transform = 'translateY(0)';
             }
-        }, 10);
+        });
     }
 
     function hideModal(modal) {
+        if (!modal) return;
         const content = modal.querySelector('.modal-content');
         if (content) {
             content.style.transform = 'translateY(20px)';
@@ -250,14 +389,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     }
 
-    // Settings Modal
-    document.querySelector('.settings-btn').addEventListener('click', () => {
-        showModal('settings-modal');
+    // Settings Popover
+    const settingsBtn = document.querySelector('.settings-btn');
+    const settingsPopover = document.getElementById('settings-popover');
+    const closeSettingsPopoverBtn = document.querySelector('.close-settings-popover');
+
+    const openSettingsPopover = () => {
+        if (!settingsPopover) return;
+        settingsPopover.classList.add('open');
+        settingsPopover.setAttribute('aria-hidden', 'false');
+        settingsBtn?.classList.add('active');
+    };
+
+    const closeSettingsPopover = () => {
+        if (!settingsPopover) return;
+        settingsPopover.classList.remove('open');
+        settingsPopover.setAttribute('aria-hidden', 'true');
+        settingsBtn?.classList.remove('active');
+    };
+
+    const toggleSettingsPopover = () => {
+        if (!settingsPopover) return;
+        const isOpen = settingsPopover.classList.contains('open');
+        if (isOpen) {
+            closeSettingsPopover();
+        } else {
+            openSettingsPopover();
+        }
+    };
+
+    settingsBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleSettingsPopover();
     });
 
-    // Keyboard Shortcuts Modal
-    document.querySelector('.shortcuts-btn').addEventListener('click', () => {
-        showModal('shortcuts-modal');
+    closeSettingsPopoverBtn?.addEventListener('click', () => {
+        closeSettingsPopover();
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!settingsPopover || !settingsPopover.classList.contains('open')) return;
+        if (settingsPopover.contains(event.target) || settingsBtn?.contains(event.target)) return;
+        closeSettingsPopover();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && settingsPopover?.classList.contains('open')) {
+            closeSettingsPopover();
+        }
     });
 
     // Share Modal
@@ -282,25 +461,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Share functionality
-    function copyToClipboard(text) {
+    function copyToClipboard(text, label) {
         navigator.clipboard.writeText(text).then(() => {
-            alert('Copied to clipboard!');
+            showToast('success', 'Copied!', `${label} copied to clipboard`);
         }).catch(err => {
             console.error('Failed to copy:', err);
-            alert('Failed to copy to clipboard');
+            showToast('error', 'Copy Failed', 'Failed to copy to clipboard');
         });
     }
 
     document.querySelector('.copy-html').addEventListener('click', () => {
-        copyToClipboard(htmlEditor.getValue());
+        copyToClipboard(htmlEditor.getValue(), 'HTML code');
     });
 
     document.querySelector('.copy-css').addEventListener('click', () => {
-        copyToClipboard(cssEditor.getValue());
+        copyToClipboard(cssEditor.getValue(), 'CSS code');
     });
 
     document.querySelector('.copy-js').addEventListener('click', () => {
-        copyToClipboard(jsEditor.getValue());
+        copyToClipboard(jsEditor.getValue(), 'JavaScript code');
     });
 
     document.querySelector('.copy-all').addEventListener('click', () => {
@@ -312,7 +491,7 @@ ${cssEditor.getValue()}
 
 // JavaScript
 ${jsEditor.getValue()}`;
-        copyToClipboard(allCode);
+        copyToClipboard(allCode, 'All code');
     });
 
     // Open in new window
@@ -349,15 +528,6 @@ ${jsEditor.getValue()}`;
     document.querySelector('.load-project').addEventListener('click', () => {
         showModal('load-modal');
         loadProjectsList();
-    });
-
-    // Settings
-    document.querySelector('.settings-btn').addEventListener('click', () => {
-        showModal('settings-modal');
-    });
-
-    document.querySelector('.shortcuts-btn').addEventListener('click', () => {
-        showModal('shortcuts-modal');
     });
 
     // Editor Settings
@@ -489,11 +659,11 @@ ${jsEditor.getValue()}`;
         }
         if (e.altKey && e.key === ',') {
             e.preventDefault();
-            document.querySelector('.settings-btn').click();
+            toggleSettingsPopover();
         }
-        if (e.ctrlKey && e.key === 'k') {
+        if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) {
             e.preventDefault();
-            document.querySelector('.shortcuts-btn').click();
+            toggleSettingsPopover();
         }
         if (e.altKey && e.key === 't') {
             e.preventDefault();
@@ -540,11 +710,12 @@ ${jsEditor.getValue()}`;
     document.querySelector('.save-confirm').addEventListener('click', () => {
         const projectName = document.getElementById('project-name').value;
         if (!projectName) {
-            alert('Please enter a project name');
+            showToast('warning', 'Name Required', 'Please enter a project name');
             return;
         }
 
-        showLoading('Saving project...');
+        const progressBar = document.querySelector('.progress-bar');
+        progressBar.classList.add('active');
 
         const project = {
             html: htmlEditor.getValue(),
@@ -557,114 +728,113 @@ ${jsEditor.getValue()}`;
             localStorage.setItem(`project_${projectName}`, JSON.stringify(project));
             hideModal(document.getElementById('save-modal'));
             document.getElementById('project-name').value = '';
-            hideLoading();
+            progressBar.classList.remove('active');
+            showToast('success', 'Project Saved', `"${projectName}" has been saved successfully`);
         }, 500);
     });
 
-    // Download Files
     document.querySelector('.download-files').addEventListener('click', async () => {
-        showLoading('Preparing download...');
+        const progressBar = document.querySelector('.progress-bar');
+        progressBar.classList.add('active');
+        showToast('info', 'Preparing Download', 'Creating zip file...');
 
-        // Create a zip file
         const zip = new JSZip();
-        
-        // Add files to the zip
         zip.file('index.html', htmlEditor.getValue());
         zip.file('styles.css', cssEditor.getValue());
         zip.file('script.js', jsEditor.getValue());
 
         try {
-            // Generate the zip file
             const content = await zip.generateAsync({ type: 'blob' });
-            
-            // Create download link
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
             link.download = 'web-project.zip';
-            
-            // Trigger download
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
-            hideLoading();
+            progressBar.classList.remove('active');
+            showToast('success', 'Download Ready', 'Your project has been downloaded');
         } catch (error) {
             console.error('Error creating zip file:', error);
-            hideLoading();
-            alert('Error creating zip file. Please try again.');
+            progressBar.classList.remove('active');
+            showToast('error', 'Download Failed', 'Error creating zip file. Please try again.');
         }
     });
 
-    // Load Projects List
     function loadProjectsList() {
-        showLoading('Loading projects...');
+        const progressBar = document.querySelector('.progress-bar');
+        progressBar.classList.add('active');
         const projectsList = document.querySelector('.projects-list');
         projectsList.innerHTML = '';
 
         setTimeout(() => {
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key.startsWith('project_')) {
-                    const projectName = key.replace('project_', '');
-                    const project = JSON.parse(localStorage.getItem(key));
-                    
-                    const projectItem = document.createElement('div');
-                    projectItem.className = 'project-item';
-                    projectItem.innerHTML = `
-                        <div class="project-info">
-                            <div class="project-name">${projectName}</div>
-                            <div class="project-date">Last modified: ${new Date(project.lastModified).toLocaleDateString()}</div>
-                        </div>
-                        <div class="project-actions">
-                            <button class="btn btn-secondary delete-project" title="Delete Project">
-                                <i class="ri-delete-bin-line"></i>
-                            </button>
-                            <button class="btn btn-primary load-project-btn">
-                                <i class="ri-folder-open-line"></i>
-                                Load
-                            </button>
-                        </div>
-                    `;
-                    
-                    projectItem.querySelector('.load-project-btn').addEventListener('click', () => {
-                        loadProject(projectName);
-                        hideModal(document.getElementById('load-modal'));
-                    });
+                if (!key.startsWith('project_')) continue;
 
-                    projectItem.querySelector('.delete-project').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (confirm(`Are you sure you want to delete "${projectName}"?`)) {
-                            localStorage.removeItem(`project_${projectName}`);
-                            projectItem.remove();
-                        }
-                    });
+                const projectName = key.replace('project_', '');
+                const project = JSON.parse(localStorage.getItem(key));
+                const projectItem = document.createElement('div');
+                projectItem.className = 'project-item';
+                projectItem.innerHTML = `
+                    <div class="project-info">
+                        <div class="project-name">${projectName}</div>
+                        <div class="project-date">Last modified: ${new Date(project.lastModified).toLocaleDateString()}</div>
+                    </div>
+                    <div class="project-actions">
+                        <button class="btn btn-secondary delete-project" title="Delete Project">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                        <button class="btn btn-primary load-project-btn">
+                            <i class="ri-folder-open-line"></i>
+                            Load
+                        </button>
+                    </div>
+                `;
 
-                    projectsList.appendChild(projectItem);
-                }
+                projectItem.querySelector('.load-project-btn').addEventListener('click', () => {
+                    loadProject(projectName);
+                    hideModal(document.getElementById('load-modal'));
+                });
+
+                projectItem.querySelector('.delete-project').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Are you sure you want to delete "${projectName}"?`)) {
+                        localStorage.removeItem(`project_${projectName}`);
+                        projectItem.remove();
+                        showToast('success', 'Project Deleted', `"${projectName}" has been deleted`);
+                    }
+                });
+
+                projectsList.appendChild(projectItem);
             }
 
             if (projectsList.children.length === 0) {
                 projectsList.innerHTML = '<div class="no-projects">No saved projects found</div>';
             }
 
-            hideLoading();
+            progressBar.classList.remove('active');
         }, 500);
     }
 
-    // Load Project
     function loadProject(projectName) {
-        showLoading('Loading project...');
-        
+        const progressBar = document.querySelector('.progress-bar');
+        progressBar.classList.add('active');
+
         setTimeout(() => {
             const project = JSON.parse(localStorage.getItem(`project_${projectName}`));
-            if (!project) return;
+            if (!project) {
+                progressBar.classList.remove('active');
+                showToast('warning', 'Project Missing', 'Could not find the selected project');
+                return;
+            }
 
-            htmlEditor.setValue(project.html);
-            cssEditor.setValue(project.css);
-            jsEditor.setValue(project.js);
+            htmlEditor.setValue(project.html || '');
+            cssEditor.setValue(project.css || '');
+            jsEditor.setValue(project.js || '');
             updatePreview();
-            
-            hideLoading();
+
+            progressBar.classList.remove('active');
+            showToast('success', 'Project Loaded', `"${projectName}" loaded successfully`);
         }, 500);
     }
 
